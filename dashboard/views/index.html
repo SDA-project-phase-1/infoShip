@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>infoShip Dashboard</title>
+    <script src="/socket.io/socket.io.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .queue-container { width: 300px; background: #eee; border-radius: 10px; }
+        #queue-bar { height: 20px; width: 0%; background: green; transition: 0.3s; border-radius: 10px; }
+    </style>
+</head>
+<body>
+ <h1>home page</h1>
+
+    <script>
+        const socket = io(); 
+        socket.on("packet-arrived",(packet)=>{
+            console.log("A packet just arrived");
+            console.log(packet);
+            //console.log("see the pakcett")
+        })
+
+         socket.on("config-arrived",(packet)=>{
+            console.log("Config of charts just arrived");
+            console.log(packet);
+            //console.log("see the pakcett")
+        })
+
+         socket.on("telemetry-arrived",(packet)=>{
+            console.log("Config of telemtery just arrived");
+            console.log(packet);
+            //console.log("see the pakcett")
+        })
+
+        
+    </script>
+</body>
+</html>
