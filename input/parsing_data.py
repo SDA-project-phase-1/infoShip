@@ -50,7 +50,8 @@ def read_data_file(path_of_File,data_schema,raw_data_queue,input_speed):
             raw_data_queue.put(packet)
             current_size = raw_data_queue.qsize()
             print(f"Items waiting in Raw Stream: {current_size}")
-            time.sleep(input_speed)
+            # time.sleep(input_speed)
+            time.sleep(1)
 
     #map the raw column names as mentioned in config
 #       "schema_mapping": {

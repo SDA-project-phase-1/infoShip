@@ -6,6 +6,8 @@ import os
 import subprocess
 import requests
 import time
+import webbrowser
+
 
 url_data = "http://localhost:3000/data"
 url_config = "http://localhost:3000/ui-config"
@@ -45,55 +47,58 @@ def tell_server_about_telemetry(telemetry_config: dict) -> None:
         print(f"Failed to send telemetry: {e}")
 
 def main() -> None:
-    #starting server
-    server_service = start_server()
-    time.sleep(2)
+    try:
+        #starting server
+        server_service = start_server()
+        time.sleep(2)
 
-    #reading config
-    config_data = fr.read_config_file(p.return_config_directory())
-    pipeline_settings = config_data["pipeline_dynamics"]
-    data_schema = config_data["schema_mapping"]
-    data_set_path = config_data["dataset_path"]
-    processing_tasks = config_data["processing"]
-    visualizations = config_data["visualizations"]
-    telemtry_config = config_data["visualizations"]["telemetry"]
-    charts_config = config_data["visualizations"]["data_charts"]
-    input_speed = pipeline_settings["input_delay_seconds"]
-    num_workers = pipeline_settings["core_parallelism"]
-    queue_limit = pipeline_settings["stream_queue_max_size"]
+        #automatically opening the browser
+        webbrowser.open("http://localhost:3000")
+        time.sleep(7)
 
-    #sending config to browser
-    tell_server_about_config(charts_config)
-    tell_server_about_telemetry(telemtry_config)
-    time.sleep(12)
-    
+        #reading config
+        config_data = fr.read_config_file(p.return_config_directory())
+        pipeline_settings = config_data["pipeline_dynamics"]
+        data_schema = config_data["schema_mapping"]
+        data_set_path = config_data["dataset_path"]
+        processing_tasks = config_data["processing"]
+        visualizations = config_data["visualizations"]
+        telemtry_config = visualizations["telemetry"]
+        charts_config = visualizations["data_charts"]
+        input_speed = pipeline_settings["input_delay_seconds"]
+        num_workers = pipeline_settings["core_parallelism"]
+        queue_limit = pipeline_settings["stream_queue_max_size"]
 
-     #queues
-    raw_data_stream = multiprocessing.Queue(maxsize=queue_limit) 
-    processed_data_stream = multiprocessing.Queue(maxsize=queue_limit) 
-    
+        #sending config to browser
+        tell_server_about_config(charts_config)
+        tell_server_about_telemetry(telemtry_config)
+        time.sleep(7)
+        
+        #queues
+        raw_data_stream = multiprocessing.Queue(maxsize=queue_limit) 
+        processed_data_stream = multiprocessing.Queue(maxsize=queue_limit) 
+        
+        print(f"this is the path{os.path.join(p.return_base_directory(),data_set_path)}")
 
+        #Process can only do communication between python to python wale process
+        #For external communciation subporcess
+        input_process = multiprocessing.Process(
+            target=pd.read_data_file,
+            args=(os.path.join(p.return_base_directory(),data_set_path),data_schema,raw_data_stream,input_speed)
+        ) #when a process is created wo file ks shru sa start karta read karna
 
-    print(f"this is the path{os.path.join(p.return_base_directory(),data_set_path)}")
+        
+        input_process.start()
+        while True:
+            packet = raw_data_stream.get() 
+            print(f"Core received: {packet}")
+            requests.post(url_data,json=packet)
+            time.sleep(1)
 
-    #Process can only do communication between python to python wale process
-    #For external communciation subporcess
-    input_process = multiprocessing.Process(
-        target=pd.read_data_file,
-        args=(os.path.join(p.return_base_directory(),data_set_path),data_schema,raw_data_stream,input_speed)
-    ) #when a process is created wo file ks shru sa start karta read karna
-
-    
-    input_process.start()
-    while True:
-        packet = raw_data_stream.get() 
-            
-            # Now you can "see" the data that the Input Module sent
-        print(f"Core received: {packet}")
-        requests.post(url_data,json=packet)
-
-    #end of function
-    server_service.terminate()
+        #end of function
+        server_service.terminate()
+    except Exception as e:
+        print(f"Some Error {e}")
 
 
 if __name__ == "__main__": #now only one porcess will run this

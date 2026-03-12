@@ -1,38 +1,84 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>infoShip Dashboard</title>
-    <script src="/socket.io/socket.io.js"></script> 
+    <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .queue-container { width: 300px; background: #eee; border-radius: 10px; }
-        #queue-bar { height: 20px; width: 0%; background: green; transition: 0.3s; border-radius: 10px; }
+        .queue-container {
+            width: 300px;
+            background: #eee;
+            border-radius: 10px;
+        }
+
+        #queue-bar {
+            height: 20px;
+            width: 0%;
+            background: green;
+            transition: 0.3s;
+            border-radius: 10px;
+        }
     </style>
 </head>
+
 <body>
- <h1>home page</h1>
+    <h1>home page</h1>
+    <div style="width: 800px; margin-top: 50px;">
+        <canvas id="sensorChart"></canvas>
+    </div>
 
     <script>
-        const socket = io(); 
-        socket.on("packet-arrived",(packet)=>{
+
+        const socket = io();
+
+        const ctx = document.getElementById('sensorChart').getContext('2d');
+        const sensorChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [], // Time labels will go here
+                datasets: [{
+                    label: 'Live Sensor Value',
+                    data: [], // Actual values will go here
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            }
+        });
+        socket.on("packet-arrived", (packet) => {
             console.log("A packet just arrived");
             console.log(packet);
             //console.log("see the pakcett")
+
+            // Add new data point
+            sensorChart.data.labels.push(packet.time_period);
+            sensorChart.data.datasets[0].data.push(packet.metric_value);
+
+            // Keep only the last 20 points so the graph doesn't get too crowded
+            if (sensorChart.data.labels.length > 20) {
+                sensorChart.data.labels.shift();
+                sensorChart.data.datasets[0].data.shift();
+            }
+
+            sensorChart.update(); // Redraw the graph!
         })
 
-         socket.on("config-arrived",(packet)=>{
+        socket.on("config-arrived", (packet) => {
             console.log("Config of charts just arrived");
             console.log(packet);
             //console.log("see the pakcett")
         })
 
-         socket.on("telemetry-arrived",(packet)=>{
+        socket.on("telemetry-arrived", (packet) => {
             console.log("Config of telemtery just arrived");
             console.log(packet);
             //console.log("see the pakcett")
         })
 
-        
+
+
+
     </script>
 </body>
+
 </html>
