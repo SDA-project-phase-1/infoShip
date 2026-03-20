@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>infoShip Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <h1>infoShip Real-Time Intelligence</h1>
+
+    <div class="dashboard-grid">
+        <div class="chart-container">
+            <canvas id="liveChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="averageChart"></canvas>
+        </div>
+    </div>
+
+    <div class="telemetry-row">
+        <div class="telemetry-box">
+            <span>Raw Stream Size</span>
+            <div id="raw-size">0</div>
+        </div>
+        <div class="telemetry-box">
+            <span>Intermediate Stream</span>
+            <div id="int-size">0</div>
+        </div>
+        <div class="telemetry-box">
+            <span>Processed Stream</span>
+            <div id="proc-size">0</div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let hueRotation = 180; // Starting color for the "pop" effect
+
+        // Add these refined options to your commonOptions object
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false, // This allows the chart to fill the container height
+            scales: {
+                y: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)', // Very subtle grid lines
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#58a6ff', // Cyan colored numbers
+                        font: {
+                            family: "'Courier New', monospace", // Tech look for numbers
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        padding: 10
+                    },
+                    title: {
+                        display: true,
+                        text: 'VALUE',
+                        color: '#8b949e',
+                        font: { size: 12, weight: 'bold', letterSpacing: 2 }
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        color: '#8b949e',
+                        font: {
+                            size: 12,
+                            style: 'italic'
+                        },
+                        maxRotation: 45,
+                        minRotation: 45
+                    },
+                    title: {
+                        display: true,
+                        text: 'TIMESTAMP / PERIOD',
+                        color: '#8b949e',
+                        font: { size: 12, weight: 'bold' }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: '#e6edf3',
+                        font: { size: 16, weight: '500' },
+                        padding: 20,
+                        usePointStyle: true // Circular legend icons
+                    }
+                }
+            },
+            animation: { duration: 0 }
+        };
+        const liveChart = new Chart(document.getElementById('liveChart'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Live Sensor Value',
+                    data: [],
+                    borderColor: 'hsl(180, 70%, 50%)',
+                    backgroundColor: 'rgba(88, 166, 255, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: commonOptions
+        });
+
+        const averageChart = new Chart(document.getElementById('averageChart'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Running Average',
+                    data: [],
+                    borderColor: 'hsl(340, 70%, 50%)',
+                    borderDash: [5, 5],
+                    tension: 0.4
+                }]
+            },
+            options: commonOptions
+        });
+
+        socket.on("packet-arrived", (packet) => {
+            // Update charts
+            liveChart.data.labels.push(packet.time_period);
+            liveChart.data.datasets[0].data.push(packet.metric_value);
+            averageChart.data.labels.push(packet.time_period);
+            averageChart.data.datasets[0].data.push(packet.computed_mean);
+
+            // COLOR POP: Shift hue by 10 degrees every packet
+            hueRotation = (hueRotation + 10) % 360;
+            liveChart.data.datasets[0].borderColor = `hsl(${hueRotation}, 70%, 50%)`;
+
+            if (liveChart.data.labels.length > 20) {
+                liveChart.data.labels.shift();
+                liveChart.data.datasets[0].data.shift();
+                averageChart.data.labels.shift();
+                averageChart.data.datasets[0].data.shift();
+            }
+
+            liveChart.update();
+            averageChart.update();
+        });
+
+        // Use this to update the telemetry boxes from your stream size prints
+        socket.on("telemetry-arrived", (data) => {
+            document.getElementById('raw-size').innerText = data.raw || 0;
+            document.getElementById('int-size').innerText = data.int || 0;
+            document.getElementById('proc-size').innerText = data.proc || 0;
+        });
+    </script>
+</body>
+
+</html>

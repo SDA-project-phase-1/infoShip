@@ -18,6 +18,10 @@ type_functions = {
 
 def read_data_file(path_of_File,data_schema,raw_data_queue,input_speed):
     #read the file
+    print(path_of_File)
+    print(data_schema)
+    print(raw_data_queue)
+    print(input_speed)
     with open(path_of_File,mode='r') as file:
         reader = csv.reader(file)
         headers = next(reader)
@@ -32,26 +36,35 @@ def read_data_file(path_of_File,data_schema,raw_data_queue,input_speed):
 
         for idx,h in enumerate(headers):
             for c in data_schema["columns"]:
-               # print(c)
-                if c["source_name"] == h:
+                # print(c)
+                if c["source_name"].strip().lower() == h.strip().lower():
                     #match mil gaya
                     index_mapping[c["internal_mapping"]]={
                         "index" : idx,
                         "type" : c["data_type"]
                     }
+                    break
+            print(index_mapping)
       
      
-        packet = {}
+        idx = 0
+        # print("INDEX")
+        # print(index_mapping)
         for row in reader:
+            packet = {}
             for i in index_mapping:
                 temp = index_mapping[i]
                 cast_func = type_functions.get(temp["type"], str) 
                 packet[i] = cast_func(row[temp["index"]])
+                packet["id"] = idx
+                # print("in loop", packet)
+            idx += 1
+            # print("outerLoop",packet)
             raw_data_queue.put(packet)
             current_size = raw_data_queue.qsize()
-            print(f"Items waiting in Raw Stream: {current_size}")
+            # print(f"Items waiting in Raw Stream: {current_size}")
             # time.sleep(input_speed)
-            time.sleep(1)
+            time.sleep(input_speed)
 
     #map the raw column names as mentioned in config
 #       "schema_mapping": {

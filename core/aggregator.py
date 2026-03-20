@@ -3,3 +3,35 @@
 # Calculate: The Functional Core calculates the mean of those 10 values.
 # Merge: The Shell adds a new key, computed_metric, to the original packet.
 # Emit: It sends that single, "fat" packet to processed queue.
+import heapq
+
+def cal_avg(window):
+    if not window:
+        return 0.0
+    return sum(window) / len(window)
+
+def aggregating_from_intermediate_stream(intermediate_stream,processed_data_Stream,window_size):
+    window = []
+    pq = []
+
+    expected_packet_value = 0
+    while True:
+        packet = intermediate_stream.get()
+        heapq.heappush(pq, (packet["id"], packet))
+
+        while pq and pq[0][0] == expected_packet_value:
+            heapq.heappop(pq)
+            if packet["invalid_flag"] == False:
+                avg = cal_avg(window)
+                window.append(packet["metric_value"])
+
+                if len(window) >= window_size:
+                    window.pop(0)
+
+                packet["computed_mean"] = cal_avg(window)
+
+                print("In the aggregate function")
+                print(packet)
+                processed_data_Stream.put(packet)
+            expected_packet_value += 1
+
