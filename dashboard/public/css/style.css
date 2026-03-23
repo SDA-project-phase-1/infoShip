@@ -1,300 +1,409 @@
- @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
 
-        :root {
-            --bg-color: #0b0e14;
-            --card-bg: #161b22;
-            --border-color: #30363d;
-            --text-main: #c9d1d9;
-            --accent-cyan: #58a6ff;
-            --axis-tick-color: #8b949e;
-            --glow-cyan: rgba(88, 166, 255, 0.6);
-            --glow-pink: rgba(255, 80, 140, 0.6);
-        }
+:root {
+    --bg-color: #0b0e14;
+    --card-bg: #161b22;
+    --border-color: #30363d;
+    --text-main: #c9d1d9;
+    --accent-cyan: #58a6ff;
+    --axis-tick-color: #8b949e;
+    --glow-cyan: rgba(88, 166, 255, 0.6);
+    --glow-pink: rgba(255, 80, 140, 0.6);
+}
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {
-            font-family: 'Share Tech Mono', monospace;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
-        }
+body {
+    font-family: 'Share Tech Mono', monospace;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
 
-        /* ── Animated grid background ── */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(88,166,255,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(88,166,255,0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
-            animation: gridDrift 20s linear infinite;
-            pointer-events: none;
-            z-index: 0;
-        }
+/* ── Animated grid background ── */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(88,166,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(88,166,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: gridDrift 20s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+}
 
-        @keyframes gridDrift {
-            0%   { background-position: 0 0; }
-            100% { background-position: 40px 40px; }
-        }
+@keyframes gridDrift {
+    0%   { background-position: 0 0; }
+    100% { background-position: 40px 40px; }
+}
 
-        /* ── Scanline overlay ── */
-        body::after {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 2px,
-                rgba(0,0,0,0.08) 2px,
-                rgba(0,0,0,0.08) 4px
-            );
-            pointer-events: none;
-            z-index: 999;
-            animation: scanPulse 4s ease-in-out infinite;
-        }
+/* ── Scanline overlay ── */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+    animation: scanPulse 4s ease-in-out infinite;
+}
 
-        @keyframes scanPulse {
-            0%, 100% { opacity: 0.4; }
-            50%       { opacity: 0.8; }
-        }
+@keyframes scanPulse {
+    0%, 100% { opacity: 0.4; }
+    50%       { opacity: 0.8; }
+}
 
-        /* ── Roaming scan line ── */
-        #scan-line {
-            position: fixed;
-            left: 0; right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(88,166,255,0.5), transparent);
-            box-shadow: 0 0 8px rgba(88,166,255,0.8);
-            z-index: 998;
-            animation: scanMove 6s linear infinite;
-            pointer-events: none;
-        }
+/* ── Roaming scan line ── */
+#scan-line {
+    position: fixed;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(88,166,255,0.5), transparent);
+    box-shadow: 0 0 8px rgba(88,166,255,0.8);
+    z-index: 998;
+    animation: scanMove 6s linear infinite;
+    pointer-events: none;
+}
 
-        @keyframes scanMove {
-            0%   { top: -2px; }
-            100% { top: 100vh; }
-        }
+@keyframes scanMove {
+    0%   { top: -2px; }
+    100% { top: 100vh; }
+}
 
-        /* ── Title ── */
-        h1 {
-            font-family: 'Orbitron', monospace;
-            font-weight: 900;
-            font-size: clamp(1.2rem, 3vw, 2rem);
-            letter-spacing: 6px;
-            text-transform: uppercase;
-            margin-bottom: 30px;
-            margin-top: 10px;
-            position: relative;
-            z-index: 1;
-            color: #e6edf3;
-            text-shadow:
-                0 0 10px rgba(88,166,255,0.8),
-                0 0 30px rgba(88,166,255,0.4),
-                0 0 60px rgba(88,166,255,0.2);
-            animation: titlePulse 3s ease-in-out infinite;
-        }
+/* ── Title ── */
+h1 {
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: clamp(1.2rem, 3vw, 2rem);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+    margin-top: 10px;
+    position: relative;
+    z-index: 1;
+    color: #e6edf3;
+    text-shadow:
+        0 0 10px rgba(88,166,255,0.8),
+        0 0 30px rgba(88,166,255,0.4),
+        0 0 60px rgba(88,166,255,0.2);
+    animation: titlePulse 3s ease-in-out infinite;
+}
 
-        @keyframes titlePulse {
-            0%, 100% { text-shadow: 0 0 10px rgba(88,166,255,0.8), 0 0 30px rgba(88,166,255,0.4); }
-            50%       { text-shadow: 0 0 20px rgba(88,166,255,1),   0 0 50px rgba(88,166,255,0.7), 0 0 80px rgba(88,166,255,0.3); }
-        }
+@keyframes titlePulse {
+    0%, 100% { text-shadow: 0 0 10px rgba(88,166,255,0.8), 0 0 30px rgba(88,166,255,0.4); }
+    50%       { text-shadow: 0 0 20px rgba(88,166,255,1),   0 0 50px rgba(88,166,255,0.7), 0 0 80px rgba(88,166,255,0.3); }
+}
 
-        /* blinking cursor after title */
-        h1::after {
-            content: '_';
-            animation: blink 1s step-end infinite;
-        }
+h1::after {
+    content: '_';
+    animation: blink 1s step-end infinite;
+}
 
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50%       { opacity: 0; }
-        }
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+}
 
-        /* ── Dashboard grid ── */
-        .dashboard-grid {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            width: 95vw;
-            max-width: 1800px;
-            position: relative;
-            z-index: 1;
-        }
+/* ── All-the-graphs wrapper (replaces old .dashboard-grid) ── */
+#all-the-graphs {
+    display: flex;
+    flex-wrap: wrap;          /* wraps to next row if too many charts */
+    justify-content: center;
+    gap: 15px;
+    width: 95vw;
+    max-width: 1800px;
+    position: relative;
+    z-index: 1;
+}
 
-        /* ── Chart card ── */
-        .chart-container {
-            flex: 1;
-            position: relative;
-            height: 60vh;
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            overflow: hidden;
-            transition: border-color 0.3s;
+/* ── Chart card ── */
+/* 
+    flex: 1 1 400px  means:
+      - grow to fill available space
+      - shrink if needed
+      - minimum width of 400px before wrapping
+    So 1 chart = full width, 2 = side by side, 3+ = wraps to next row
+*/
+.chart-container {
+    flex: 1 1 400px;
+    min-width: 0;             /* prevents overflow on small screens */
+    position: relative;
+    height: 60vh;
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    overflow: hidden;
+    transition: border-color 0.3s;
+    animation: cardBreath 4s ease-in-out infinite;
+}
 
-            /* Animated gradient border glow */
-            animation: cardBreath 4s ease-in-out infinite;
-        }
+@keyframes cardBreath {
+    0%, 100% { box-shadow: 0 0 15px rgba(88,166,255,0.1), 0 10px 30px rgba(0,0,0,0.5); }
+    50%       { box-shadow: 0 0 30px rgba(88,166,255,0.3), 0 10px 40px rgba(0,0,0,0.6); }
+}
 
-        @keyframes cardBreath {
-            0%, 100% { box-shadow: 0 0 15px rgba(88,166,255,0.1), 0 10px 30px rgba(0,0,0,0.5); }
-            50%       { box-shadow: 0 0 30px rgba(88,166,255,0.3), 0 10px 40px rgba(0,0,0,0.6); }
-        }
+.chart-container:hover {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 40px rgba(88,166,255,0.4), 0 10px 40px rgba(0,0,0,0.6);
+}
 
-        .chart-container:hover {
-            border-color: var(--accent-cyan);
-            box-shadow: 0 0 40px rgba(88,166,255,0.4), 0 10px 40px rgba(0,0,0,0.6);
-        }
+/* Corner decorations */
+.chart-container::before,
+.chart-container::after {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    border-color: var(--accent-cyan);
+    border-style: solid;
+    z-index: 2;
+    opacity: 0.7;
+}
 
-        /* Corner decorations */
-        .chart-container::before,
-        .chart-container::after {
-            content: '';
-            position: absolute;
-            width: 14px; height: 14px;
-            border-color: var(--accent-cyan);
-            border-style: solid;
-            z-index: 2;
-            opacity: 0.7;
-        }
+.chart-container::before {
+    top: 6px; left: 6px;
+    border-width: 2px 0 0 2px;
+}
 
-        .chart-container::before {
-            top: 6px; left: 6px;
-            border-width: 2px 0 0 2px;
-        }
+.chart-container::after {
+    bottom: 6px; right: 6px;
+    border-width: 0 2px 2px 0;
+}
 
-        .chart-container::after {
-            bottom: 6px; right: 6px;
-            border-width: 0 2px 2px 0;
-        }
+/* card label badge */
+.card-label {
+    position: absolute;
+    top: 10px; right: 20px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 3px;
+    color: var(--accent-cyan);
+    opacity: 0.6;
+    z-index: 3;
+    text-transform: uppercase;
+}
 
-        /* card label badge */
-        .card-label {
-            position: absolute;
-            top: 10px; right: 20px;
-            font-family: 'Orbitron', monospace;
-            font-size: 0.6rem;
-            letter-spacing: 3px;
-            color: var(--accent-cyan);
-            opacity: 0.6;
-            z-index: 3;
-        }
+/* ── Telemetry row ── */
+.telemetry-row {
+    display: flex;
+    gap: 10px;
+    width: 95vw;
+    max-width: 1800px;
+    margin-top: 20px;
+    margin-bottom: 50px;
+    position: relative;
+    z-index: 1;
+}
 
-        /* ── Telemetry row ── */
-        .telemetry-row {
-            display: flex;
-            gap: 10px;
-            width: 95vw;
-            max-width: 1800px;
-            margin-top: 20px;
-            margin-bottom: 50px;
-            position: relative;
-            z-index: 1;
-        }
+.telemetry-box {
+    flex: 1;
+    background: #1c2128;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
 
-        .telemetry-box {
-            flex: 1;
-            background: #1c2128;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 20px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
+.telemetry-box:hover {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 20px rgba(88,166,255,0.2);
+}
 
-        .telemetry-box:hover {
-            border-color: var(--accent-cyan);
-            box-shadow: 0 0 20px rgba(88,166,255,0.2);
-        }
+.telemetry-box span {
+    display: block;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--axis-tick-color);
+    margin-bottom: 10px;
+    font-family: 'Orbitron', monospace;
+}
 
-        .telemetry-box span {
-            display: block;
-            font-size: 0.7rem;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            color: var(--axis-tick-color);
-            margin-bottom: 10px;
-            font-family: 'Orbitron', monospace;
-        }
+.telemetry-box div {
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: var(--accent-cyan);
+    font-family: 'Orbitron', monospace;
+    text-shadow: 0 0 10px rgba(88,166,255,0.6);
+    transition: color 0.2s;
+}
+@keyframes glitchFlash {
+    0%   { opacity: 1;   transform: translateY(0);    filter: blur(0); }
+    20%  { opacity: 0;   transform: translateY(-12px); filter: blur(4px); }
+    50%  { opacity: 0; }
+    65%  { opacity: 1;   transform: translateY(3px);  filter: blur(0); }
+    80%  { transform: translateY(-1px); }
+    100% { transform: translateY(0); }
+}
 
-        .telemetry-box div {
-            font-size: 2.2rem;
-            font-weight: bold;
-            color: var(--accent-cyan);
-            font-family: 'Orbitron', monospace;
-            text-shadow: 0 0 10px rgba(88,166,255,0.6);
-            transition: color 0.2s;
-        }
+.glitch { animation: glitchFlash 0.35s ease forwards; }
 
-        /* glitch flash when value updates */
-        @keyframes glitchFlash {
-            0%   { transform: translateX(0);   color: #fff; text-shadow: 0 0 20px rgba(255,255,255,0.9); }
-            20%  { transform: translateX(-3px); color: #ff508c; text-shadow: -2px 0 8px #ff508c; }
-            40%  { transform: translateX(3px);  color: #58a6ff; text-shadow: 2px 0 8px #58a6ff; }
-            60%  { transform: translateX(-2px); color: #50ffb4; text-shadow: -1px 0 6px #50ffb4; }
-            80%  { transform: translateX(1px); }
-            100% { transform: translateX(0);   color: var(--accent-cyan); text-shadow: 0 0 10px rgba(88,166,255,0.6); }
-        }
+/* color snaps to state after animation settles */
+.glitch.state-green  { color: #39d353; text-shadow: 0 0 12px rgba(57,211,83,0.8); }
+.glitch.state-yellow { color: #e3b341; text-shadow: 0 0 12px rgba(227,179,65,0.8); }
+.glitch.state-red    { color: #f85149; text-shadow: 0 0 12px rgba(248,81,73,0.8); }
 
-        .glitch {
-            animation: glitchFlash 0.4s ease forwards;
-        }
+.glitch {
+    animation: glitchFlash 0.4s ease forwards;
+}
 
-        /* pulse ring on telemetry box */
-        @keyframes pulseRing {
-            0%   { box-shadow: inset 0 0 0 0 rgba(88,166,255,0), 0 0 0 0 rgba(88,166,255,0.5); }
-            50%  { box-shadow: inset 0 0 0 0 rgba(88,166,255,0), 0 0 0 12px rgba(88,166,255,0); }
-            100% { box-shadow: none; }
-        }
+/* ── Pulse ring on telemetry box ── */
+@keyframes pulseRing {
+    0%   { box-shadow: inset 0 0 0 0 rgba(88,166,255,0), 0 0 0 0 rgba(88,166,255,0.5); }
+    50%  { box-shadow: inset 0 0 0 0 rgba(88,166,255,0), 0 0 0 12px rgba(88,166,255,0); }
+    100% { box-shadow: none; }
+}
 
-        .pulse-box {
-            animation: pulseRing 0.6s ease-out;
-        }
+.pulse-box {
+    animation: pulseRing 0.6s ease-out;
+}
 
-        /* ── Status bar at bottom ── */
-        #status-bar {
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
-            height: 28px;
-            background: rgba(22,27,34,0.95);
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            gap: 30px;
-            z-index: 1000;
-            font-size: 0.7rem;
-            letter-spacing: 2px;
-            color: var(--axis-tick-color);
-        }
+/* ── Status bar ── */
+#status-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 28px;
+    background: rgba(22,27,34,0.95);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 30px;
+    z-index: 1000;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    color: var(--axis-tick-color);
+}
 
-        #status-bar .dot {
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: #3fb950;
-            box-shadow: 0 0 6px #3fb950;
-            animation: dotBlink 2s ease-in-out infinite;
-            display: inline-block;
-            margin-right: 6px;
-        }
+#status-bar .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #3fb950;
+    box-shadow: 0 0 6px #3fb950;
+    animation: dotBlink 2s ease-in-out infinite;
+    display: inline-block;
+    margin-right: 6px;
+}
 
-        @keyframes dotBlink {
-            0%, 100% { opacity: 1; }
-            50%       { opacity: 0.3; }
-        }
+@keyframes dotBlink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+}
 
-        #packet-count { color: var(--accent-cyan); }
-        #uptime-counter { color: #3fb950; }
+#packet-count { color: var(--accent-cyan); }
+#uptime-counter { color: #3fb950; }
+/* ── Health bar ── */
+.health-bar-wrap {
+    width: 100%;
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    margin: 12px 0 8px;
+    overflow: hidden;
+}
+.health-bar {
+    height: 100%;
+    width: 0%;
+    border-radius: 2px;
+    transition: width 0.4s ease, background 0.35s ease;
+}
+
+/* ── Status badge ── */
+.tele-status {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    display: inline-block;
+    border: 1px solid currentColor;
+    opacity: 0.85;
+    transition: color 0.35s ease;
+}
+
+/* ── GREEN ── */
+.telemetry-box.state-green {
+    border-color: #39d353 !important;
+    box-shadow: 0 0 18px rgba(57,211,83,0.4), inset 0 0 20px rgba(57,211,83,0.08);
+    transition: border-color 0.35s, box-shadow 0.35s;
+}
+.telemetry-box div.state-green {
+    color: #39d353 !important;
+    text-shadow: 0 0 12px rgba(57,211,83,0.7) !important;
+}
+.health-bar.state-green {
+    background: #39d353;
+    box-shadow: 0 0 6px rgba(57,211,83,0.6);
+}
+.tele-status.state-green { color: #39d353 !important; }
+
+/* ── YELLOW ── */
+.telemetry-box.state-yellow {
+    border-color: #e3b341 !important;
+    box-shadow: 0 0 18px rgba(227,179,65,0.4), inset 0 0 20px rgba(227,179,65,0.08);
+    animation: cardBreath 4s ease-in-out infinite, yellowFlicker 2s ease-in-out infinite;
+}
+@keyframes yellowFlicker {
+    0%,100% { box-shadow: 0 0 18px rgba(227,179,65,0.4), inset 0 0 20px rgba(227,179,65,0.08); }
+    50%     { box-shadow: 0 0 35px rgba(227,179,65,0.8), inset 0 0 30px rgba(227,179,65,0.15); }
+}
+.telemetry-box div.state-yellow {
+    color: #e3b341 !important;
+    text-shadow: 0 0 12px rgba(227,179,65,0.7) !important;
+}
+.health-bar.state-yellow {
+    background: #e3b341;
+    box-shadow: 0 0 6px rgba(227,179,65,0.6);
+}
+.tele-status.state-yellow { color: #e3b341 !important; }
+
+/* ── RED ── */
+.telemetry-box.state-red {
+    border-color: #f85149 !important;
+    box-shadow: 0 0 18px rgba(248,81,73,0.4), inset 0 0 20px rgba(248,81,73,0.08);
+    animation: cardBreath 4s ease-in-out infinite, redAlert 0.9s ease-in-out infinite;
+}
+@keyframes redAlert {
+    0%,100% { box-shadow: 0 0 18px rgba(248,81,73,0.4), inset 0 0 20px rgba(248,81,73,0.08); }
+    50%     { box-shadow: 0 0 50px rgba(248,81,73,0.9), inset 0 0 40px rgba(248,81,73,0.2); }
+}
+.telemetry-box div.state-red {
+    color: #f85149 !important;
+    text-shadow: 0 0 12px rgba(248,81,73,0.7) !important;
+}
+.health-bar.state-red {
+    background: #f85149;
+    box-shadow: 0 0 6px rgba(248,81,73,0.6);
+    animation: barPulse 0.7s ease-in-out infinite;
+}
+@keyframes barPulse {
+    0%,100% { opacity: 1; }
+    50%     { opacity: 0.5; }
+}
+.tele-status.state-red {
+    color: #f85149 !important;
+    animation: badgeBlink 0.9s step-end infinite;
+}
+@keyframes badgeBlink {
+    0%,100% { opacity: 1; }
+    50%     { opacity: 0.15; }
+}

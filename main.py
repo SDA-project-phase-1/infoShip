@@ -1,5 +1,7 @@
 import input.reading_config as fr
 import input.parsing_data as pd
+import telemetry.notifier as noti
+import telemetry.observer as obs
 import path as p
 import multiprocessing
 import os
@@ -13,7 +15,8 @@ import core.aggregator as agg
 
 url_data = "http://localhost:3000/data"
 url_config = "http://localhost:3000/ui-config"
-url_telemetry = "http://localhost:3000/telemetry-config"
+url_telemetry = "http://localhost:3000/telemetry"
+url_telemetry_config = "http://localhost:3000/telemetry-config"
 
 
 
@@ -38,12 +41,13 @@ def tell_server_about_config(charts_config : dict) -> None:
         print(f"Cannot send the config file{e}")
     
 
-def tell_server_about_telemetry(telemetry_config: dict) -> None:
+def tell_server_about_telemetry(telemetry_config: dict,size) -> None:
     try:
         print(f"Sending Telemetry Config: {telemetry_config}")
+        telemetry_config["size"] = size
         
         # POST the data to the Node.js bridge
-        response = requests.post(url_telemetry, json=telemetry_config)
+        response = requests.post(url_telemetry_config, json=telemetry_config)
         
         if response.status_code == 200:
             print("Telemetry config sent successfully!")
@@ -54,8 +58,10 @@ def get_packets_from_file(raw_data_stream):
     try:
         while True:
             packet = raw_data_stream.get() 
-            print(f"Core received: {packet}")
-            print(f"Stream Size (Raw): {raw_data_stream.qsize()}")
+            if packet is None:
+                break
+            # print(f"Core received: {packet}")
+            # print(f"Stream Size (Raw): {raw_data_stream.qsize()}")
             requests.post(url_data,json=packet)
             # time.sleep(1)
     except requests.exceptions.RequestException as e:
@@ -79,14 +85,16 @@ def sending_response(processed_events_stream):
     try:
         while True:
             packet = processed_events_stream.get() 
-            print(f"Stream Size (Processed): {processed_events_stream.qsize()}")
+            if packet is None:
+                break
+            # print(f"Stream Size (Processed): {processed_events_stream.qsize()}")
             response = requests.post(url_data,json=packet)
             if response.status_code == 200:
                 print("✅Packet sent successfully!")
             else:
                 print("❌",response.status_code)
 
-        print("ERRRORRRR❌❌❌❌")
+        #print("ERRRORRRR❌❌❌❌")
     except requests.exceptions.ConnectionError:
             print("Connection Error: Is the Node.js server running?")
     except Exception as e:
@@ -118,10 +126,12 @@ def main() -> None:
         num_workers = pipeline_settings["core_parallelism"]
         queue_limit = pipeline_settings["stream_queue_max_size"]
 
+        #! removeeeeee
+        time.sleep(3)
         #?sending config to browser
         tell_server_about_config(charts_config)
-        tell_server_about_telemetry(telemtry_config)
-       # time.sleep(3)
+        tell_server_about_telemetry(telemtry_config,queue_limit)
+      
         
         #?queues
         raw_data_stream = multiprocessing.Queue(maxsize=queue_limit) 
@@ -179,14 +189,19 @@ def main() -> None:
         # arr_of_process.append(sending_response_to_server)
         print("After defining sending_response_to_server")
 
-        #?sixth telemtry
-        # sending_telemtry_process = multiprocessing.Process(
-        #     target=sending_response,
-        #     args=(processed_data_stream,)
-        # )
-        # arr_of_process.append(sending_telemtry_process)
+        queues_to_monitor = {
+            "raw": raw_data_stream,
+            "int": intermediate_data_stream,
+            "proc": processed_data_stream
+        }
 
-        print("Before starting processes")
+        telemetry_subject = noti.PipelineTelemetry(queues_to_monitor)
+        dash_observer = obs.DashboardObserver(url_telemetry)
+        telemetry_subject.subscribe(dash_observer)
+        telemetry_worker = telemetry_subject.start_monitoring()
+
+
+
         # initalizing_cores_process.start()
         initalizing_cores(no_of_Cores, raw_data_stream, intermediate_data_stream, processed_data_stream,processing_tasks,arr_of_process)
         input_process.start()
@@ -204,9 +219,23 @@ def main() -> None:
         #     print(f"Waiting for {i.name} to join. Current sizes: Raw={raw_data_stream.qsize()}, Int={intermediate_data_stream.qsize()}, Proc={processed_data_stream.qsize()}")
         #     i.join()
 
-        input_process.join()
-        sending_response_to_server.join()
+
+        input_process.join() 
+
+        for _ in range(no_of_Cores):
+            raw_data_stream.put(None) 
+
+        for worker in arr_of_process:
+            worker.join()
+
+        intermediate_data_stream.put(None)
         aggregating_cores_value.join()
+
+        processed_data_stream.put(None)
+        sending_response_to_server.join()
+
+        telemetry_worker.terminate()
+        telemetry_worker.join()
 
         for worker in arr_of_process:
             print(f"Waiting for Core {worker.name}...")

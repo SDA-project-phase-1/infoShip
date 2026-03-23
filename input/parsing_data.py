@@ -65,31 +65,7 @@ def read_data_file(path_of_File,data_schema,raw_data_queue,input_speed):
             # print(f"Items waiting in Raw Stream: {current_size}")
             # time.sleep(input_speed)
             time.sleep(input_speed)
+        # raw_data_queue.put(None)
 
-    #map the raw column names as mentioned in config
-#       "schema_mapping": {
-#     "columns": [
-#       {
-#         "source_name": "Sensor_ID",
-#         "internal_mapping": "entity_name",
-#         "data_type": "string"
-#       },
-#       {
-#         "source_name": "Timestamp",
-#         "internal_mapping": "time_period",
-#         "data_type": "integer"
-#       },
-#       {
-#         "source_name": "Raw_Value",
-#         "internal_mapping": "metric_value",
-#         "data_type": "float"
-#       },
-#       {
-#         "source_name": "Auth_Signature",
-#         "internal_mapping": "security_hash",
-#         "data_type": "string"
-#       }
-#     ]
-#   },
 
     return 0

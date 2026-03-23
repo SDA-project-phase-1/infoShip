@@ -4,41 +4,48 @@
 <head>
     <title>infoShip Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="css/style.css">
      <script src="/socket.io/socket.io.js"></script>
 
 </head>
 
 <body>
+    <!-- <div id="scan-line"></div> -->
+    <h1> Real-Time Data Statistics</h1>
 
-    <div id="scan-line"></div>
-    <h1>infoShip Real-Time Intelligence</h1>
-
-    <div class="dashboard-grid">
-        <div class="chart-container">
-            <div class="card-label">LIVE STREAM</div>
-            <canvas id="liveChart"></canvas>
-        </div>
-        <div class="chart-container">
-            <div class="card-label">AVG ANALYSIS</div>
-            <canvas id="averageChart"></canvas>
-        </div>
+    <div class="dashboard-grid" id="all-the-graphs">
+        <!-- <div class="chart-container"> -->
+            <!-- <div class="card-label">LIVE STREAM</div> -->
+            <!-- <div class="card-label" id="first-chart-label"></div> -->
+            <!-- <canvas id="liveChart"></canvas> -->
+        <!-- </div> -->
+        <!-- <div class="chart-container"> -->
+            <!-- <div class="card-label">AVG ANALYSIS</div> -->
+            <!-- <div class="card-label" id="second-chart-label"></div> -->
+            <!-- <canvas id="averageChart"></canvas> -->
+        <!-- </div> -->
     </div>
 
-    <div class="telemetry-row">
-        <div class="telemetry-box" id="box-raw">
-            <span>Raw Stream Size</span>
-            <div id="raw-size">0</div>
-        </div>
-        <div class="telemetry-box" id="box-int">
-            <span>Intermediate Stream</span>
-            <div id="int-size">0</div>
-        </div>
-        <div class="telemetry-box" id="box-proc">
-            <span>Processed Stream</span>
-            <div id="proc-size">0</div>
-        </div>
+   <div class="telemetry-row">
+    <div class="telemetry-box" id="box-raw">
+        <span>Raw Stream Size</span>
+        <div id="raw-size">0</div>
+        <div class="health-bar-wrap"><div class="health-bar" id="bar-raw"></div></div>
+        <div class="tele-status" id="status-raw">NOMINAL</div>
     </div>
+    <div class="telemetry-box" id="box-int">
+        <span>Intermediate Stream</span>
+        <div id="int-size">0</div>
+        <div class="health-bar-wrap"><div class="health-bar" id="bar-int"></div></div>
+        <div class="tele-status" id="status-int">NOMINAL</div>
+    </div>
+    <div class="telemetry-box" id="box-proc">
+        <span>Processed Stream</span>
+        <div id="proc-size">0</div>
+        <div class="health-bar-wrap"><div class="health-bar" id="bar-proc"></div></div>
+        <div class="tele-status" id="status-proc">NOMINAL</div>
+    </div>
+</div>
 
     <div id="status-bar">
         <span><span class="dot"></span>ONLINE</span>
@@ -47,169 +54,7 @@
         <span>STREAM: ACTIVE</span>
     </div>
 
-    <script>
-        
-        let startTime = Date.now();
-        setInterval(() => {
-            const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
-            const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
-            const s = String(elapsed % 60).padStart(2, '0');
-            document.getElementById('uptime-counter').textContent = `${h}:${m}:${s}`;
-        }, 1000);
 
-        let packetCount = 0;
-
-        /* ── Glitch helper ── */
-        function glitchUpdate(elId, boxId, val) {
-            const el  = document.getElementById(elId);
-            const box = document.getElementById(boxId);
-            el.textContent = val;
-            el.classList.remove('glitch');
-            void el.offsetWidth; // reflow
-            el.classList.add('glitch');
-            box.classList.remove('pulse-box');
-            void box.offsetWidth;
-            box.classList.add('pulse-box');
-        }
-
-        /* ── Chart shared options ── */
-        const commonOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
-                    ticks: {
-                        color: '#58a6ff',
-                        font: { family: "'Share Tech Mono', monospace", size: 13, weight: 'bold' },
-                        padding: 10
-                    },
-                    title: {
-                        display: true, text: 'VALUE',
-                        color: '#8b949e',
-                        font: { size: 11, weight: 'bold', letterSpacing: 2 }
-                    }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: {
-                        color: '#8b949e',
-                        font: { family: "'Share Tech Mono', monospace", size: 11, style: 'italic' },
-                        maxRotation: 45, minRotation: 45
-                    },
-                    title: {
-                        display: true, text: 'TIMESTAMP / PERIOD',
-                        color: '#8b949e',
-                        font: { size: 11, weight: 'bold' }
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: true, position: 'top',
-                    labels: {
-                        color: '#e6edf3',
-                        font: { family: "'Orbitron', monospace", size: 12, weight: '700' },
-                        padding: 20,
-                        usePointStyle: true
-                    }
-                }
-            },
-            animation: { duration: 300 }
-        };
-
-        let hueRotation = 180;
-
-        const liveChart = new Chart(document.getElementById('liveChart'), {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Live Sensor Value',
-                    data: [],
-                    borderColor: `hsl(${hueRotation}, 80%, 60%)`,
-                    backgroundColor: `hsla(${hueRotation}, 80%, 60%, 0.08)`,
-                    pointBackgroundColor: `hsl(${hueRotation}, 80%, 60%)`,
-                    pointRadius: 4,
-                    pointHoverRadius: 7,
-                    fill: true,
-                    tension: 0.4,
-                    borderWidth: 2,
-                    shadowColor: `hsl(${hueRotation}, 80%, 60%)`,
-                    shadowBlur: 15
-                }]
-            },
-            options: commonOptions
-        });
-
-        const averageChart = new Chart(document.getElementById('averageChart'), {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Running Average',
-                    data: [],
-                    borderColor: 'hsl(340, 80%, 60%)',
-                    backgroundColor: 'hsla(340, 80%, 60%, 0.07)',
-                    pointBackgroundColor: 'hsl(340, 80%, 60%)',
-                    pointRadius: 4,
-                    pointHoverRadius: 7,
-                    borderDash: [6, 4],
-                    tension: 0.4,
-                    borderWidth: 2,
-                    fill: true
-                }]
-            },
-            options: commonOptions
-        });
-
-        /* ── Demo mode: generate fake packets if no socket ── */
-        let demoTime = 0;
-        let runningSum = 0;
-
-        const socket = io();
-
-        socket.on("packet-arrived", (packet) =>  {
-            packetCount++;
-            document.getElementById('packet-count').textContent = packetCount;
-
-            hueRotation = (hueRotation + 10) % 360;
-            liveChart.data.datasets[0].borderColor        = `hsl(${hueRotation}, 80%, 60%)`;
-            liveChart.data.datasets[0].backgroundColor    = `hsla(${hueRotation}, 80%, 60%, 0.08)`;
-            liveChart.data.datasets[0].pointBackgroundColor = `hsl(${hueRotation}, 80%, 60%)`;
-
-            liveChart.data.labels.push(packet.time_period);
-            liveChart.data.datasets[0].data.push(packet.metric_value);
-            averageChart.data.labels.push(packet.time_period);
-            averageChart.data.datasets[0].data.push(packet.computed_mean);
-
-            if (liveChart.data.labels.length > 20) {
-                liveChart.data.labels.shift();
-                liveChart.data.datasets[0].data.shift();
-                averageChart.data.labels.shift();
-                averageChart.data.datasets[0].data.shift();
-            }
-
-            liveChart.update();
-            averageChart.update();
-        })
-
-         socket.on("telemetry-arrived", (data) => {
-            glitchUpdate('raw-size',  'box-raw',  data.raw  || 0);
-            glitchUpdate('int-size',  'box-int',  data.int  || 0);
-            glitchUpdate('proc-size', 'box-proc', data.proc || 0);
-        })
-
-        /* ── Socket.io integration (if available) ── */
-        if (typeof io !== 'undefined') {
-            const socket = io();
-            socket.on('packet-arrived',   handlePacket);
-            socket.on('telemetry-arrived', handleTelemetry);
-        } else {
-            /* Fallback: demo ticker */
-            setInterval(generateDemoPacket, 800);
-        }
-    </script>
+    <script type="module" src="/js/script.js"></script>
 </body>
 </html>

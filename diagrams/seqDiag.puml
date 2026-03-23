@@ -1,0 +1,43 @@
+@startuml
+skinparam backgroundColor #0b0e14
+skinparam sequenceArrowColor #58a6ff
+skinparam sequenceParticipantBackgroundColor #161b22
+skinparam sequenceParticipantBorderColor #58a6ff
+skinparam sequenceFontColor #c9d1d9
+skinparam sequenceLifeLineBorderColor #30363d
+
+participant "PipelineNode\n(multiprocessing)" as PN
+participant "SocketServer\n(Node.js)" as SS
+participant "DashboardClient\n(Browser)" as DC
+participant "StreamHealthSubject\n(Observer)" as SHS
+participant "TelemetryObserver x3\n(raw/int/proc)" as TO
+
+== Startup / Config ==
+PN -> SS : emit('config-arrived', { show_raw, show_int,\n show_proc, size: 50 })
+SS -> DC : config-arrived
+DC -> DC : store queueMaxSize = config.size
+DC -> DC : create charts from config
+DC -> SHS : instantiate subject
+SHS -> TO : subscribe(rawObserver)
+SHS -> TO : subscribe(intObserver)
+SHS -> TO : subscribe(procObserver)
+
+== Live Data Loop ==
+loop every packet
+    PN -> PN : process data\nthrough queues
+    PN -> SS : emit('packet-arrived', { metric_value, time_period })
+    SS -> DC : packet-arrived
+    DC -> DC : update charts\nshift if > 20 points
+
+    PN -> SS : emit('telemetry-arrived',\n{ raw: N, int: N, proc: N })
+    SS -> DC : telemetry-arrived
+    DC -> DC : glitchUpdate(values)
+    DC -> SHS : subject.update({ raw, int, proc })
+    SHS -> TO : rawObserver.update(data)
+    TO -> TO : applyHealthState(size)\nGREEN / YELLOW / RED
+    SHS -> TO : intObserver.update(data)
+    TO -> TO : applyHealthState(size)
+    SHS -> TO : procObserver.update(data)
+    TO -> TO : applyHealthState(size)
+end
+@enduml

@@ -4,6 +4,9 @@ import time
 def core_main_work(raw_data_stream,intermediate_avg_data,input_delay,core_config):
     while True:
         packet = raw_data_stream.get()
+        if packet is None:
+            raw_data_stream.put(None)
+            break
         packet["invalid_flag"] = False
         print(f"Core received: {packet["id"]}",end="")
         print(f" Raw Stream: {raw_data_stream.qsize()}",end="")

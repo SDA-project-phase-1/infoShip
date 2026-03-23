@@ -49,6 +49,14 @@ app.post('/ui-config',(req,res,next)=>{
 app.post('/telemetry-config',(req,res,next)=>{
     // console.log("post request");
     // console.log(req.body);
+    io.emit('telemetry-config-arrived',req.body);
+    res.sendStatus(200);
+    
+})
+
+app.post('/telemetry',(req,res,next)=>{
+    // console.log("post request");
+    // console.log(req.body);
     io.emit('telemetry-arrived',req.body);
     res.sendStatus(200);
     

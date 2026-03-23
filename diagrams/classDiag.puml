@@ -1,0 +1,66 @@
+@startuml ClassDiagram
+
+skinparam backgroundColor #0b0e14
+skinparam classBackgroundColor #161b22
+skinparam classBorderColor #58a6ff
+skinparam classArrowColor #58a6ff
+skinparam classFontColor #c9d1d9
+skinparam classAttributeFontColor #8b949e
+
+class StreamHealthSubject {
+    - _observers: TelemetryObserver[]
+    - queueMaxSize: number
+    + subscribe(observer): void
+    + update(data): void
+}
+
+interface IObserver {
+    + update(data): void
+}
+
+class TelemetryObserver {
+    - key: string
+    - boxEl: HTMLElement
+    - valueEl: HTMLElement
+    - barEl: HTMLElement
+    - statusEl: HTMLElement
+    + update(data): void
+    - applyHealthState(size): void
+    - triggerGlitch(): void
+}
+
+class PipelineNode {
+    - raw_queue: Queue
+    - intermediate_queue: Queue
+    - processed_queue: Queue
+    + process(): void
+    + emit_telemetry(): void
+}
+
+class SocketServer {
+    + emit(event, data): void
+    + on(event, callback): void
+}
+
+class DashboardClient {
+    - socket: Socket
+    - charts: Chart[]
+    - streamHealth: StreamHealthSubject
+    + onPacketArrived(packet): void
+    + onTelemetryArrived(data): void
+    + onConfigArrived(config): void
+}
+
+IObserver <|.. TelemetryObserver
+StreamHealthSubject o-- TelemetryObserver
+DashboardClient *-- StreamHealthSubject
+DashboardClient --> SocketServer : listens
+PipelineNode --> SocketServer : emits telemetry
+
+note right of TelemetryObserver
+  GREEN  : size < 50% capacity
+  YELLOW : size < 80% capacity
+  RED    : size >= 80% capacity
+end note
+
+@enduml

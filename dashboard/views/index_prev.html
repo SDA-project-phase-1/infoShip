@@ -40,15 +40,14 @@
         const socket = io();
         let hueRotation = 180; // Starting color for the "pop" effect
 
-        // Add these refined options to your commonOptions object
         const commonOptions = {
-            responsive: true,
+            responsive: true, //automatic resizing hojati ha 
             maintainAspectRatio: false, // This allows the chart to fill the container height
             scales: {
                 y: {
                     grid: {
-                        color: 'rgba(255, 255, 255, 0.05)', // Very subtle grid lines
-                        drawBorder: false
+                        color: 'rgba(255, 255, 255, 0.05)',
+                        drawBorder: true
                     },
                     ticks: {
                         color: '#58a6ff', // Cyan colored numbers
@@ -99,6 +98,8 @@
             },
             animation: { duration: 0 }
         };
+
+
         const liveChart = new Chart(document.getElementById('liveChart'), {
             type: 'line',
             data: {
